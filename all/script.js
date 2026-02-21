@@ -223,7 +223,8 @@ if (phoneInput) {
 
 // ===== 10. TELEGRAM BOT =====
 // ===== 10. TELEGRAM BOT (CORS PROXY bilan) =====
-const contactForm = document.getElementById('contactForm');
+ const contactForm = document.getElementById('contactForm');
+
 if (contactForm) {
     contactForm.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -234,7 +235,6 @@ if (contactForm) {
         const phone = document.getElementById('phone').value;
         const message = document.getElementById('message').value;
         
-        // Validate
         if (!name.trim() || !phone.trim() || !message.trim()) {
             formMsg.textContent = translations[currentLang]['msg.error'];
             formMsg.className = 'form-message error';
@@ -242,56 +242,41 @@ if (contactForm) {
             setTimeout(() => formMsg.style.display = 'none', 3000);
             return;
         }
-        
-        // Telegram message
-        const text = `🚀 **Yangi xabar!**\n\n👤 **Ism:** ${name}\n📞 **Telefon:** ${phone}\n💬 **Xabar:** ${message}`;
-        
-        // Disable button
+
         submitBtn.disabled = true;
         submitBtn.innerHTML = currentLang === 'en' ? 
             '<span>Sending...</span> <i class="fas fa-spinner fa-spin"></i>' : 
             '<span>Отправка...</span> <i class="fas fa-spinner fa-spin"></i>';
-        
+
         try {
-            // CORS PROXY orqali yuborish
-            const url = `https://corsproxy.io/?${encodeURIComponent('https://api.telegram.org/bot8514142968:AAEj82ZobPep9_CVKG3jFrPfgWGZGvUSt2g/sendMessage')}`;
-            
-            const res = await fetch(url, {
+            const res = await fetch('../.netlify/functions/sendMessage', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    chat_id: '-1003848661157', 
-                    text: text, 
-                    parse_mode: 'Markdown' 
-                })
+                body: JSON.stringify({ name, phone, message }),
             });
-            
+
             const data = await res.json();
-            
-            if (data.ok) {
+
+            if (data.success) {
                 formMsg.textContent = translations[currentLang]['msg.success'];
                 formMsg.className = 'form-message success';
                 formMsg.style.display = 'block';
                 this.reset();
-                if (phoneInput) phoneInput.value = '';
             } else {
-                throw new Error(data.description);
+                throw new Error(data.error || 'Failed to send');
             }
-        } catch (error) {
-            console.error('Error:', error);
+        } catch (err) {
+            console.error('Error:', err);
             formMsg.textContent = translations[currentLang]['msg.error'];
             formMsg.className = 'form-message error';
             formMsg.style.display = 'block';
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = `<span>${translations[currentLang]['contact.sendBtn']}</span> <i class="fas fa-paper-plane"></i>`;
-            
-            setTimeout(() => {
-                formMsg.style.display = 'none';
-            }, 5000);
+            setTimeout(() => { formMsg.style.display = 'none'; }, 5000);
         }
     });
-}   
+}
 
 // ===== 11. PORTFOLIO FILTER =====
 const filterBtns = document.querySelectorAll('.filter-btn');
