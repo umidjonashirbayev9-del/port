@@ -256,8 +256,9 @@ if (contactForm) {
             });
 
             const data = await res.json();
-
-            if (data.success) {
+            console.log(data);
+            
+            if (data.ok) {
                 formMsg.textContent = translations[currentLang]['msg.success'];
                 formMsg.className = 'form-message success';
                 formMsg.style.display = 'block';
